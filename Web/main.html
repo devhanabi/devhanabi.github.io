@@ -1,0 +1,265 @@
+﻿<head>
+  <meta charset="utf-8">
+  <title>main</title>
+  <script type="text/javascript" src="http://code.jquery.com/jquery-3.2.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.1/socket.io.js"></script>
+</head>
+
+<head>
+
+<body>
+  <canvas id="map" width="600" height="600" style="border:1px red solid"></canvas>
+  <button id="getroute">버스 정보</button>
+  <div class="blind" style="position: absolute; top:0; left:0;width: 100%; height: 100%;background-color:#000000; display:none;opacity: 0.7;"></div>
+  <div class="checkroute" style="position: absolute; top:50%; left:50%;transform: translate(-50%, -50%);width: 300px; height: 500px;background-color:#ffffff; overflow: auto;display:none;">
+    <button class="btn btn-sm btn-primary btn-block" id="exits" style="width: 30px; height: 30px;top:10px; left:250px">X</button>
+    <div style="text-align:center;font-size:30px;margin-left:5%;margin-right:5%;border:1px solid red;">버스 정보 검색</div>
+    <input type="hidden" id="busx"></input>
+    <input type="hidden" id="busy"></input>
+    <div id="inputfrom" style="margin-left:5%;margin-right:5%;border:1px solid red;">
+      <div style="text-align:center;font-size:15px;margin-bottom:10px;margin-top:10px;">번호 입력</div>
+      <input id="busidaa" style="margin-left:5%;width:70%; height:30px" value="1234"></input>
+      <button id="routech" style="margin-right:5%; height:30px; margin-bottom:10px;">검색</button>
+    </div>
+    <div id="busresult" style="margin-left:5%;margin-right:5%;margin-top:10px;border:1px red solid; height:60%; overflow-y:auto;">
+      <!--    <div id="test" style="border:1px red solid;margin: 5px 5px 0px 5px;">
+        <div id="id" style="border:1px blue solid; font-size : 12px; margin-left:5px;margin-top:5px;width:30%;"> 테스트 id </div>
+        <div id="name" style="border:1px blue solid;font-size : 20px;margin-left:5px;margin-top:2px;margin-bottom:2px;width:90%;"> 테스트 정류장 </div>
+      </div>
+      <div id="test" style="border:1px red solid;margin: 5px 5px 0px 5px;">
+        <div id="id" style="border:1px blue solid; font-size : 12px; margin-left:5px;margin-top:5px;width:30%;"> 테스트 id </div>
+        <div id="name" style="border:1px blue solid;font-size : 20px;margin-left:5px;margin-top:2px;margin-bottom:2px;width:90%;"> 테스트 정류장 </div>
+      </div>
+      <div id="test" style="border:1px red solid;margin: 5px 5px 0px 5px;">
+        <div id="id" style="border:1px blue solid; font-size : 12px; margin-left:5px;margin-top:5px;width:30%;"> 테스트 id </div>
+        <div id="name" style="border:1px blue solid;font-size : 20px;margin-left:5px;margin-top:2px;margin-bottom:2px;width:90%;"> 테스트 정류장 </div>
+      </div>-->
+    </div>
+  </div>
+  <div style="border:1px red solid; width:170px; height:70px;">
+    <div id="bus_test_id" style="border:1px blue solid; font-size : 10px; margin-left:5px;margin-top:5px;width:40%;float: left; height:15px;"> 테스트 id </div>
+    <div id="bus_test_min" style="border:1px blue solid; font-size : 10px; margin-left:100px;margin-top:5px;width:60px; height:15px;">n분후 도착</div>
+    <div id="bus_test_name" style="border:1px blue solid;font-size : 15px;margin-left:5px;margin-top:2px;width:90%;"> 테스트 정류장 </div>
+    <div id="bus_test_count" style="border:1px blue solid;font-size : 10px;margin-left:5px;margin-top:2px;width:40%;float: left;">승객수 : 5</div>
+    <button id="upcount" style="height:20px; font-size : 10px;margin-top:2px; margin-left:5px; width:38px;">승차</button>
+    <button id="downcount" style="height:20px;font-size : 10px;margin-top:2px; width:38px;">하차</button>
+
+  </div>
+  <div style="border:1px red solid; margin-top:10px; height:30px; width:300px;">
+    <button id="tmdck">승차</button>
+    <button id="gkck">승차확인</button>
+    <input id="dbwjdkdlel"></input>
+  </div>
+</body>
+<script>
+  var canvas = document.getElementById('map');
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = "#acacac"; // 색상명
+  ctx.fillRect(0, 0, 600, 600);
+  var station = [];
+
+function GetCount(){
+        $.get("http://jaeryu.duckdns.org:3001/buscount?busid=1234",
+            function(data, status) {
+              var result = JSON.parse(data).result.data.buscount.count;
+
+              $('#bus_test_count').text("승객수 : " + (result == null ? "0" : result))
+            });
+}
+
+  function draw() {
+    var canvas = document.getElementById('map');
+    var ctx = canvas.getContext('2d');
+    ctx.canvas.width = window.innerWidth;
+    ctx.canvas.height = window.innerHeight;
+  }
+  $("#tmdck").click(function() {
+    $.post("http://jaeryu.duckdns.org:3001/busbooking", {
+      busid: $('#busidaa').val(),
+      stationid: $('#bus_test_id').text(),
+      userid: $('#dbwjdkdlel').val()
+    }, function(data, status) {
+      var result = JSON.parse(data);
+	console.log(result)
+    });
+  });
+  $("#gkck").click(function() {
+    $.post("http://jaeryu.duckdns.org:3001/busride", {
+      busid: $('#busidaa').val(),
+      stationid: $('#bus_test_id').text(),
+      userid: $('#dbwjdkdlel').val()
+    }, function(data, status) {
+      var result = JSON.parse(data);
+	console.log(result)
+    });
+  });
+  $("#upcount").click(function() {
+    var count = 1
+    $.post("http://jaeryu.duckdns.org:3001/count", {
+      busid: $('#busidaa').val(),
+      buscount: count
+    }, function(data, status) {
+      var result = JSON.parse(data);
+      console.log($('#busidaa').val())
+      console.log(result)
+
+    });
+ GetCount()
+  });
+
+  $("#downcount").click(function() {
+    var count = Number($('#bus_test_count').text().substring(6))
+    if (count == 0) return;
+else count = -1;
+    $.post("http://jaeryu.duckdns.org:3001/count", {
+      busid: $('#busidaa').val(),
+      buscount: count
+    }, function(data, status) {
+      var result = JSON.parse(data);
+      console.log(result)
+
+    });
+ GetCount()
+  });
+
+  $("#exits").click(function() {
+    $(".blind").css("display", "none");
+    $(".checkroute").css("display", "none");
+  });
+  $('#getroute').click(function() {
+    $('.blind').css("display", "")
+    $('.checkroute').css("display", "")
+  });
+
+  $('#routech').click(function() {
+    if ($('#busidaa').val()) {
+      $.get("http://jaeryu.duckdns.org:3001/busroute", {
+        busid: $('#busidaa').val()
+      }, function(data, status) {
+        var result = JSON.parse(data).result.data.busroute;
+        $('#busresult').children().remove();
+        result.sort(function(a, b) {
+          return 2 * (a.idx > b.idx) - 1;
+        });
+        console.log(result)
+        for (var i = 0; i < result.length; i++) {
+          $("#busresult").append(
+
+            `<div id="test" style="border:1px red solid;margin: 5px 5px 0px 5px;">
+            <div id="test_id` + i + `" style="border:1px blue solid; font-size : 12px; margin-left:5px;margin-top:5px;width:30%;">` + result[i].idx + `</div>
+            <div id="name_name` + i + `" style="border:1px blue solid;font-size : 20px;margin-left:5px;margin-top:2px;margin-bottom:2px;width:90%;">` + result[i].name + `</div>
+          </div>`
+            /*
+                $("<div>").append(
+                  $("<div>").append(result[i].id),
+                  $("<div>").append(result[i].name)
+                )*/
+          );
+        }
+      });
+    }
+  });
+
+  $('#map').click(
+    function() {
+      var canvas = document.getElementById('map');
+      var ctx = canvas.getContext('2d');
+      var x = event.offsetX;
+      var y = event.offsetY;
+      var sx = Number($('#busx').val()) / 10 + 50 - 4;
+      var sy = Number($('#busy').val()) / 10 + 50 - 4;
+      if (sx <= x && x <= sx + 8 && sy <= y && y <= sy + 8) {
+        //  $.get("http://jaeryu.duckdns.org:3001/count", function(data, status) {
+        //    var result = JSON.parse(data);
+        //    console.log(result)
+        //  });
+        console.log("여기에 버스 정보가 로드될 예정입니다.")
+      }
+      for (var i of station) {
+        if (i[1] - 20 <= x && x <= i[1] + 20 && i[2] - 20 <= y && y <= i[2] + 20) {
+          var ii = (((sx - x) * (sx - x) + (sy - y) * (sy - y)) / 500)
+          $('#bus_test_name').text(i[0])
+          $('#bus_test_id').text(i[3])
+          $('#bus_test_min').text(ii.toFixed(0) + "분 후")
+          console.log(i[0], "입니다.")
+          console.log(ii + "분 후 도착 예정입니다")
+  	GetCount()
+
+        }
+      }
+    }
+  )
+  $.get("http://jaeryu.duckdns.org:3001/busroute", {
+    busid: "1234",
+    xhrFields: {
+      withCredentials: true
+    }
+  }, function(data, status) {
+    var canvas = document.getElementById('map');
+    var ctx = canvas.getContext('2d');
+    var result = JSON.parse(data).result.data.busroute;
+    result.sort(function(a, b) {
+      return 2 * (a.id > b.id) - 1;
+    });
+    ctx.strokeStyle = "#7F7878";
+    ctx.lineWidth = "20";
+    ctx.beginPath();
+    for (var i = 0; i < result.length; i++) {
+
+      ctx.lineTo(Number(result[i].latitude) / 10 + 50, Number(result[i].longitude) / 10 + 50);
+
+    }
+    for (var i = 0; i < result.length; i++) {
+      ctx.lineTo(Number(result[i].latitude) / 10 + 50, Number(result[i].longitude) / 10 + 50);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "black"; // 색상명
+    for (var i = 0; i < result.length; i++) {
+      station.push([result[i].name, Number(result[i].latitude) / 10 + 50, Number(result[i].longitude) / 10 + 50, result[i].idx]);
+      ctx.fillText(result[i].name, Number(result[i].latitude) / 10 + 50, Number(result[i].longitude) / 10 + 50);
+    }
+  });
+
+  setInterval(function() {
+    $.get("http://jaeryu.duckdns.org:3001/busgps", {
+      busid: "1234",
+      xhrFields: {
+        withCredentials: true
+      }
+    }, function(data, status) {
+      var canvas = document.getElementById('map');
+      var ctx = canvas.getContext('2d');
+      var result = JSON.parse(data).result.data
+      if (!$('#busx').val() && !$('#busy').val()) {
+        $('#busx').val(result.busx)
+        $('#busy').val(result.busy)
+      }
+
+      // 카운트
+      $('#bus_test_count').val(result.count);
+
+      ctx.fillStyle = "#7F7878";
+      ctx.fillRect(Number($('#busx').val()) / 10 + 46, Number($('#busy').val()) / 10 + 46, 8, 8);
+      $('#busx').val(result.busx)
+      $('#busy').val(result.busy)
+      ctx.fillStyle = "#adcaad";
+      ctx.fillRect(Number($('#busx').val()) / 10 + 46, Number($('#busy').val()) / 10 + 46, 8, 8);
+      ctx.fillStyle = "black"; // 색상명
+      for (var i of station) {
+        ctx.fillText(i[0], i[1], i[2]);
+      }
+    })
+  }, 1000);
+
+  /*
+      var host = "http://jaeryu.duckdns.org:3001";
+      var socket = io.connect(host, {"transport":["websocket"]});
+      socket.on('connect', function() {
+        console.log("connect");
+      });
+      socket.emit('busgps', { data: "count" });
+      socket.on('busgps', function(message) {
+        console.log(message);
+        // 버스좌표 그려주기
+      });*/
+</script>
