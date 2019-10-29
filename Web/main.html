@@ -15,8 +15,8 @@
     }
 
     #container #map, #overlay {
-  position: absolute;
-}
+      position: absolute;
+  }
   </style>
 </head>
 
@@ -35,13 +35,14 @@
         <input type="hidden" id="busy"></input>
         <div id="inputfrom" style="margin-left:5%;margin-right:5%;border:1px solid red;">
           <div style="text-align:center;font-size:15px;margin-bottom:10px;margin-top:10px;">번호 입력</div>
-          <input id="busidaa" style="margin-left:5%;width:70%; height:30px" value="1234"></input>
+          <input id="busidaa" style="margin-left:5%;width:70%; height:30px" value="700-2"></input>
           <button id="routech" style="margin-right:5%; height:30px; margin-bottom:10px;">검색</button>
         </div>
         <div id="busresult" style="margin-left:5%;margin-right:5%;margin-top:10px;border:1px red solid; height:60%; overflow-y:auto;">
         </div>
       </div>
-      <div style="border:1px red solid; width:170px; height:70px;">
+      <div id="pamel" style="position: absolute;top:400px; display:none;">
+        <div style="border:1px red solid; width:170px; height:70px;">
         <div id="bus_test_id" style="border:1px blue solid; font-size : 10px; margin-left:5px;margin-top:5px;width:40%;float: left; height:15px;"> 테스트 id </div>
         <div id="bus_test_min" style="border:1px blue solid; font-size : 10px; margin-left:100px;margin-top:5px;width:60px; height:15px;">n분후 도착</div>
         <div id="bus_test_name" style="border:1px blue solid;font-size : 15px;margin-left:5px;margin-top:2px;width:90%;"> 테스트 정류장 </div>
@@ -49,7 +50,8 @@
         <button id="upcount" style="height:20px; font-size : 10px;margin-top:2px; margin-left:5px; width:38px;">승차</button>
         <button id="downcount" style="height:20px;font-size : 10px;margin-top:2px; width:38px;">하차</button>
 
-      </div>
+              </div>
+                    </div>
       <div style="border:1px red solid; margin-top:10px; height:30px; width:300px;">
         <button id="tmdck">승차</button>
         <button id="gkck">승차확인</button>
@@ -63,13 +65,15 @@
   var ctx = canvas.getContext('2d');
   canvas.width = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
   canvas.height = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+//canvas.width = 10000;
+//canvas.height = 10000;
 
-  ctx.fillStyle = "#acacac"; // 색상명
+  ctx.fillStyle = "#cdcdcd"; // 색상명
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   var station = [];
 
   function GetCount() {
-    $.get("http://jaeryu.duckdns.org:3001/buscount?busid=1234",
+    $.get("http://jaeryu.duckdns.org:3001/buscount?busid=700-2",
       function(data, status) {
         var result = JSON.parse(data).result.data.buscount.count;
 
@@ -178,6 +182,7 @@
       var y = event.offsetY;
       var sx = Number($('#busx').val()) / 10 + 50 - 4;
       var sy = Number($('#busy').val()) / 10 + 50 - 4;
+      $('#pamel').css("display", "none");
       if (sx <= x && x <= sx + 8 && sy <= y && y <= sy + 8) {
         //  $.get("http://jaeryu.duckdns.org:3001/count", function(data, status) {
         //    var result = JSON.parse(data);
@@ -194,13 +199,14 @@
           console.log(i[0], "입니다.")
           console.log(ii + "분 후 도착 예정입니다")
           GetCount()
-
+          $('#pamel').css("display", "");
         }
       }
     }
   )
+  var cou = 0;
   $.get("http://jaeryu.duckdns.org:3001/busroute", {
-    busid: "1234",
+    busid: "700-2",
     xhrFields: {
       withCredentials: true
     }
@@ -216,18 +222,20 @@
     ctx.beginPath();
     for (var i = 0; i < result.length; i++) {
 
-      ctx.lineTo(Number(result[i].latitude) / 10 + 50, Number(result[i].longitude) / 10 + 50);
+      ctx.lineTo(Number(result[i].latitude) / 20 + 50, Number(result[i].longitude) / 10 + 50);
 
     }
     for (var i = 0; i < result.length; i++) {
-      ctx.lineTo(Number(result[i].latitude) / 10 + 50, Number(result[i].longitude) / 10 + 50);
+      ctx.lineTo(Number(result[i].latitude)/ 20 + 50, Number(result[i].longitude) / 10+ 50);
     }
     ctx.stroke();
     ctx.fillStyle = "black"; // 색상명
     for (var i = 0; i < result.length; i++) {
-      station.push([result[i].name, Number(result[i].latitude) / 10 + 50, Number(result[i].longitude) / 10 + 50, result[i].idx]);
-      ctx.fillText(result[i].name, Number(result[i].latitude) / 10 + 50, Number(result[i].longitude) / 10 + 50);
+      station.push([result[i].name, Number(result[i].latitude)/ 20 + 50, Number(result[i].longitude)/ 10 + 50, result[i].idx]);
+      if(i % 10 == 0)
+        ctx.fillText(result[i].name, Number(result[i].latitude)/ 20  + 50, Number(result[i].longitude)/ 10 + 50);
     }
+    cou = 1;
   });
 
   setInterval(function() {
@@ -255,9 +263,9 @@
       ctx.fillStyle = "#adcaad";
       ctx.fillRect(Number($('#busx').val()) / 10 + 46, Number($('#busy').val()) / 10 + 46, 8, 8);
       ctx.fillStyle = "black"; // 색상명
-      for (var i of station) {
-        ctx.fillText(i[0], i[1], i[2]);
-      }
+    //  for (var i of station) {
+  //      ctx.fillText(i[0], i[1], i[2]);
+    //  }
     })
   }, 1000);
 
